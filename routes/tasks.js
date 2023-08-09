@@ -67,7 +67,7 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = req.body;
   if (error) return res.status(400).send(error.details[0].message);
 
   const task = await Task.findByIdAndUpdate(
