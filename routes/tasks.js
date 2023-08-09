@@ -5,15 +5,29 @@ router.use(express.json());
 
 router.get("/", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    // Parse pagination parameters from query string
+    const page = parseInt(req.query.page) || 1; // Get the requested page number (default to 1 if not provided)
+    const limit = parseInt(req.query.limit) || 10; // Get the requested limit (default to 10 items per page)
+    const startIndex = (page - 1) * limit; // Calculate the starting index of tasks for the requested page
+    const endIndex = page * limit; // Calculate the ending index
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    // Parse sorting parameters from query string
+    const sortBy = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "desc" ? -1 : 1;
 
-    const totalTasks = await Task.countDocuments();
+    // Parse filter parameters from query string
+    const filter = {};
+    if (req.query.completed) {
+      filter.completed = req.query.completed === "true";
+    }
 
-    const tasks = await Task.find().skip(startIndex).limit(limit);
+    // Fetch tasks, apply sorting, filtering, and pagination
+    const tasks = await Task.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(startIndex)
+      .limit(limit);
+
+    const totalTasks = await Task.countDocuments(filter); // Get the total number of tasks in the database
 
     const pagination = {};
 
@@ -40,13 +54,13 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { title, description, completed, createAt } = req.body;
+  const { title, description, completed, createdAt } = req.body;
 
   const task = new Task({
     title: title,
     description: description,
     completed: completed,
-    createAt: createAt,
+    createdAt: createdAt,
   });
 
   await task.save();
@@ -63,7 +77,7 @@ router.put("/:id", async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       completed: req.body.completed,
-      createAt: req.body.createAt,
+      createdAt: req.body.createdAt,
     },
     { new: true }
   );
