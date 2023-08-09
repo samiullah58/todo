@@ -54,13 +54,12 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { title, description, completed, createdAt } = req.body;
+  const { title, description, completed } = req.body;
 
   const task = new Task({
     title: title,
     description: description,
     completed: completed,
-    createdAt: createdAt,
   });
 
   await task.save();
@@ -77,7 +76,6 @@ router.put("/:id", async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       completed: req.body.completed,
-      createdAt: req.body.createdAt,
     },
     { new: true }
   );
